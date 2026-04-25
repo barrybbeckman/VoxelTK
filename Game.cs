@@ -45,12 +45,15 @@ namespace VoxelTK
         int EBO;
         int TextureId;
 
-        public int ScreenWidth, ScreenHeight;
+        // Transformation Variables
+        float yRot = 0f;
+
+        public int Width, Height;
 
         public Game(int Width, int Height) : base(GameWindowSettings.Default, NativeWindowSettings.Default)
         {
-            ScreenWidth = Width;
-            ScreenHeight = Height;
+            this.Width = Width;
+            this.Height = Height;
 
             CenterWindow(new Vector2i(Width, Height));
         }
@@ -153,10 +156,32 @@ namespace VoxelTK
             GL.ActiveTexture(TextureUnit.Texture0);
             GL.BindTexture(TextureTarget.Texture2D, TextureId);
 
-            // Draw
+            // Draw Triangle
             GL.UseProgram(ShaderProgram);
             GL.BindVertexArray(VAO);
             GL.DrawElements(PrimitiveType.Triangles, indices.Length, DrawElementsType.UnsignedInt, 0);
+
+            // Transform Matrices
+            Matrix4 model = Matrix4.Identity;
+            Matrix4 view = Matrix4.Identity;
+            Matrix4 projection = Matrix4.CreatePerspectiveFieldOfView(MathHelper.DegreesToRadians(90.0f), Width / Height, 0.1f, 100.0f);
+
+
+            model = Matrix4.CreateRotationY(yRot);
+            yRot += 0.002f;
+
+            
+            Matrix4 translation = Matrix4.CreateTranslation(0f, 0f, -3f);
+
+            model *= translation;
+
+            int modelLocation = GL.GetUniformLocation(ShaderProgram, "model");
+            int viewLocation = GL.GetUniformLocation(ShaderProgram, "view");
+            int projectionLocation = GL.GetUniformLocation(ShaderProgram, "projection");
+
+            GL.UniformMatrix4(modelLocation, true, ref model);
+            GL.UniformMatrix4(viewLocation, true, ref view);
+            GL.UniformMatrix4(projectionLocation, true, ref projection);
 
             Context.SwapBuffers();
 
@@ -173,8 +198,8 @@ namespace VoxelTK
             base.OnResize(e);
 
             GL.Viewport(0, 0, e.Width, e.Height);
-            this.ScreenWidth = e.Width;
-            this.ScreenHeight = e.Height;
+            this.Width = e.Width;
+            this.Height = e.Height;
         }
 
         public static string LoadShaderSource(string filePath)
