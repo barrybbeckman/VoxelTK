@@ -14,14 +14,25 @@ namespace VoxelTK
     {
         float[] verticies =
         {
-            0f, 0.5f, 0f, // top vertex
-            -0.5f, -0.5f, 0f, // bottom left vertex
-            0.5f, -0.5f, 0f // bottom right vertex
+            -0.5f, 0.5f, 0f, // Top Left 
+            0.5f, 0.5f, 0f, // Top Right 
+            -0.5f, -0.5f, 0f, // Bottom Left
+            0.5f, -0.5f, 0f // Bottom Right
+        };
+
+        uint[] indices = 
+        { 
+            // Top Triangle
+            0, 1, 2,
+            // Bottom Triangle
+            3, 2, 1
         };
 
         // Render Pipeline Vars
         int VAO;
         int ShaderProgram;
+        int VBO;
+        int EBO;
 
         public int ScreenWidth, ScreenHeight;
 
@@ -38,8 +49,9 @@ namespace VoxelTK
             base.OnLoad();
 
             VAO = GL.GenVertexArray();
+            GL.BindVertexArray(VAO);
 
-            int VBO = GL.GenBuffer();
+            VBO = GL.GenBuffer();
             GL.BindBuffer(BufferTarget.ArrayBuffer, VBO);
             GL.BufferData(BufferTarget.ArrayBuffer, verticies.Length * sizeof(float), verticies, BufferUsageHint.StaticDraw);
 
@@ -50,7 +62,15 @@ namespace VoxelTK
             GL.EnableVertexArrayAttrib(VAO, 0);
 
 
-            GL.BindBuffer(BufferTarget.ArrayBuffer, 0); // unbinds VBO
+            GL.BindBuffer(BufferTarget.ArrayBuffer, 0); // Unbind VBO
+            GL.BindVertexArray(0);
+
+            EBO = GL.GenBuffer();
+            GL.BindBuffer(BufferTarget.ElementArrayBuffer, EBO);
+            GL.BufferData(BufferTarget.ElementArrayBuffer, indices.Length * sizeof(uint), indices, BufferUsageHint.StaticDraw);
+
+
+            GL.BindBuffer(BufferTarget.ArrayBuffer, 0);
             GL.BindVertexArray(0);
 
             // Create ShaderProgram
@@ -82,6 +102,8 @@ namespace VoxelTK
             base.OnUnload();
 
             GL.DeleteVertexArray(VAO);
+            GL.DeleteVertexArray(VBO);
+            GL.DeleteBuffer(EBO);
             GL.DeleteProgram(ShaderProgram);
         }
 
@@ -93,7 +115,9 @@ namespace VoxelTK
             // Draw Triangle
             GL.UseProgram(ShaderProgram);
             GL.BindVertexArray(VAO);
-            GL.DrawArrays(PrimitiveType.Triangles, 0, 3);
+            GL.BindBuffer(BufferTarget.ElementArrayBuffer, EBO);
+            GL.DrawElements(PrimitiveType.Triangles, indices.Length, DrawElementsType.UnsignedInt, 0);
+            //GL.DrawArrays(PrimitiveType.Triangles, 0, 4);
 
             Context.SwapBuffers();
 
