@@ -87,7 +87,7 @@ namespace VoxelTK
 
         protected override void OnRenderFrame(FrameEventArgs args)
         {
-            GL.ClearColor(0.83f, 0.68f, 0.21f, 1f);
+            GL.ClearColor(0.6f, 0.0f, 1.0f, 1f);
             GL.Clear(ClearBufferMask.ColorBufferBit);
 
             // Draw Triangle
