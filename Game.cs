@@ -12,14 +12,48 @@ namespace VoxelTK
 {
     internal class Game : GameWindow
     {
-        public int ScreenWidth;
-        public int ScreenHeight;
+        public int ScreenWidth, ScreenHeight;
 
         public Game(int Width, int Height) : base(GameWindowSettings.Default, NativeWindowSettings.Default)
         {
-            this.CenterWindow(new Vector2i(Width, Height));
             ScreenWidth = Width;
             ScreenHeight = Height;
+
+            CenterWindow(new Vector2i(Width, Height));
+        }
+
+        protected override void OnLoad()
+        {
+            base.OnLoad();
+        }
+
+        protected override void OnUnload()
+        {
+            base.OnUnload();
+        }
+
+        protected override void OnRenderFrame(FrameEventArgs args)
+        {
+            GL.ClearColor(1f, 1f, 1f, 1f);
+            GL.Clear(ClearBufferMask.ColorBufferBit);
+
+            Context.SwapBuffers();
+
+            base.OnRenderFrame(args);
+        }
+
+        protected override void OnUpdateFrame(FrameEventArgs args)
+        {
+            base.OnUpdateFrame(args);
+        }
+
+        protected override void OnResize(ResizeEventArgs e)
+        {
+            base.OnResize(e);
+
+            GL.Viewport(0, 0, e.Width, e.Height);
+            this.ScreenWidth = e.Width;
+            this.ScreenHeight = e.Height;
         }
     }
 }
