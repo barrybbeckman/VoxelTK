@@ -13,28 +13,96 @@ namespace VoxelTK
 {
     internal class Game : GameWindow
     {
-        float[] verticies =
+
+        List<Vector3> vertices = new List<Vector3>()
         {
-            -0.5f, 0.5f, 0f, // Top Left 
-            0.5f, 0.5f, 0f, // Top Right 
-            -0.5f, -0.5f, 0f, // Bottom Left
-            0.5f, -0.5f, 0f // Bottom Right
+            // front face
+            new Vector3(-0.5f, 0.5f, 0.5f), // topleft vert
+            new Vector3(0.5f, 0.5f, 0.5f), // topright vert
+            new Vector3(0.5f, -0.5f, 0.5f), // bottomright vert
+            new Vector3(-0.5f, -0.5f, 0.5f), // bottomleft vert
+            // right face
+            new Vector3(0.5f, 0.5f, 0.5f), // topleft vert
+            new Vector3(0.5f, 0.5f, -0.5f), // topright vert
+            new Vector3(0.5f, -0.5f, -0.5f), // bottomright vert
+            new Vector3(0.5f, -0.5f, 0.5f), // bottomleft vert
+            // back face
+            new Vector3(0.5f, 0.5f, -0.5f), // topleft vert
+            new Vector3(-0.5f, 0.5f, -0.5f), // topright vert
+            new Vector3(-0.5f, -0.5f, -0.5f), // bottomright vert
+            new Vector3(0.5f, -0.5f, -0.5f), // bottomleft vert
+            // left face
+            new Vector3(-0.5f, 0.5f, -0.5f), // topleft vert
+            new Vector3(-0.5f, 0.5f, 0.5f), // topright vert
+            new Vector3(-0.5f, -0.5f, 0.5f), // bottomright vert
+            new Vector3(-0.5f, -0.5f, -0.5f), // bottomleft vert
+            // top face
+            new Vector3(-0.5f, 0.5f, -0.5f), // topleft vert
+            new Vector3(0.5f, 0.5f, -0.5f), // topright vert
+            new Vector3(0.5f, 0.5f, 0.5f), // bottomright vert
+            new Vector3(-0.5f, 0.5f, 0.5f), // bottomleft vert
+            // bottom face
+            new Vector3(-0.5f, -0.5f, 0.5f), // topleft vert
+            new Vector3(0.5f, -0.5f, 0.5f), // topright vert
+            new Vector3(0.5f, -0.5f, -0.5f), // bottomright vert
+            new Vector3(-0.5f, -0.5f, -0.5f), // bottomleft vert
         };
 
-        float[] texCoords =
+        List<Vector2> texCoords = new List<Vector2>()
         {
-            0f, 1f,
-            1f, 1f,
-            0f, 0f,
-            1f, 0f
+            new Vector2(0f, 1f),
+            new Vector2(1f, 1f),
+            new Vector2(1f, 0f),
+            new Vector2(0f, 0f),
+
+            new Vector2(0f, 1f),
+            new Vector2(1f, 1f),
+            new Vector2(1f, 0f),
+            new Vector2(0f, 0f),
+
+            new Vector2(0f, 1f),
+            new Vector2(1f, 1f),
+            new Vector2(1f, 0f),
+            new Vector2(0f, 0f),
+
+            new Vector2(0f, 1f),
+            new Vector2(1f, 1f),
+            new Vector2(1f, 0f),
+            new Vector2(0f, 0f),
+
+            new Vector2(0f, 1f),
+            new Vector2(1f, 1f),
+            new Vector2(1f, 0f),
+            new Vector2(0f, 0f),
+
+            new Vector2(0f, 1f),
+            new Vector2(1f, 1f),
+            new Vector2(1f, 0f),
+            new Vector2(0f, 0f),
         };
 
-        uint[] indices = 
-        { 
-            // Top Triangle
+        uint[] indices =
+        {
+            // first face
+            // top triangle
             0, 1, 2,
-            // Bottom Triangle
-            3, 2, 1
+            // bottom triangle
+            2, 3, 0,
+
+            4, 5, 6,
+            6, 7, 4,
+
+            8, 9, 10,
+            10, 11, 8,
+
+            12, 13, 14,
+            14, 15, 12,
+
+            16, 17, 18,
+            18, 19, 16,
+
+            20, 21, 22,
+            22, 23, 20
         };
 
         // Render Pipeline Vars
@@ -69,7 +137,7 @@ namespace VoxelTK
             // Position VBO
             VBO = GL.GenBuffer();
             GL.BindBuffer(BufferTarget.ArrayBuffer, VBO);
-            GL.BufferData(BufferTarget.ArrayBuffer, verticies.Length * sizeof(float), verticies, BufferUsageHint.StaticDraw);
+            GL.BufferData(BufferTarget.ArrayBuffer, vertices.Count * Vector3.SizeInBytes, vertices.ToArray(), BufferUsageHint.StaticDraw);
 
             GL.VertexAttribPointer(0, 3, VertexAttribPointerType.Float, false, 0, 0);
             GL.EnableVertexArrayAttrib(VAO, 0);
@@ -77,7 +145,7 @@ namespace VoxelTK
             // Texture Coord VBO
             TextureVBO = GL.GenBuffer();
             GL.BindBuffer(BufferTarget.ArrayBuffer, TextureVBO);
-            GL.BufferData(BufferTarget.ArrayBuffer, texCoords.Length * sizeof(float), texCoords, BufferUsageHint.StaticDraw);
+            GL.BufferData(BufferTarget.ArrayBuffer, texCoords.Count * Vector2.SizeInBytes, texCoords.ToArray(), BufferUsageHint.StaticDraw);
 
             // Set attrib pointer for tex coords (location = 1) while texture VBO is bound
             GL.VertexAttribPointer(1, 2, VertexAttribPointerType.Float, false, 0, 0);
@@ -87,9 +155,7 @@ namespace VoxelTK
             EBO = GL.GenBuffer();
             GL.BindBuffer(BufferTarget.ElementArrayBuffer, EBO);
             GL.BufferData(BufferTarget.ElementArrayBuffer, indices.Length * sizeof(uint), indices, BufferUsageHint.StaticDraw);
-
-            GL.BindBuffer(BufferTarget.ArrayBuffer, 0);
-            GL.BindVertexArray(0);
+            GL.BindBuffer(BufferTarget.ElementArrayBuffer, 0);
 
             // Create ShaderProgram
             ShaderProgram = GL.CreateProgram();
@@ -133,6 +199,7 @@ namespace VoxelTK
 
             // Unbind Texture
             GL.BindTexture(TextureTarget.Texture2D, 0);
+            GL.Enable(EnableCap.DepthTest);
         }
 
         protected override void OnUnload()
@@ -140,7 +207,7 @@ namespace VoxelTK
             base.OnUnload();
 
             GL.DeleteVertexArray(VAO);
-            GL.DeleteBuffer(VBO); // Fix: was DeleteVertexArray(VBO)
+            GL.DeleteBuffer(VBO);
             GL.DeleteBuffer(TextureVBO);
             GL.DeleteBuffer(EBO);
             GL.DeleteTexture(TextureId);
@@ -150,29 +217,21 @@ namespace VoxelTK
         protected override void OnRenderFrame(FrameEventArgs args)
         {
             GL.ClearColor(0.6f, 0.0f, 1.0f, 1f);
-            GL.Clear(ClearBufferMask.ColorBufferBit);
+            GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit); 
 
-            // Bind texture before drawing
-            GL.ActiveTexture(TextureUnit.Texture0);
-            GL.BindTexture(TextureTarget.Texture2D, TextureId);
-
-            // Draw Triangle
             GL.UseProgram(ShaderProgram);
             GL.BindVertexArray(VAO);
-            GL.DrawElements(PrimitiveType.Triangles, indices.Length, DrawElementsType.UnsignedInt, 0);
+            GL.BindBuffer(BufferTarget.ElementArrayBuffer, EBO);
+            GL.BindTexture(TextureTarget.Texture2D, TextureId);
 
-            // Transform Matrices
             Matrix4 model = Matrix4.Identity;
             Matrix4 view = Matrix4.Identity;
             Matrix4 projection = Matrix4.CreatePerspectiveFieldOfView(MathHelper.DegreesToRadians(90.0f), Width / Height, 0.1f, 100.0f);
 
-
             model = Matrix4.CreateRotationY(yRot);
             yRot += 0.002f;
 
-            
             Matrix4 translation = Matrix4.CreateTranslation(0f, 0f, -3f);
-
             model *= translation;
 
             int modelLocation = GL.GetUniformLocation(ShaderProgram, "model");
@@ -183,8 +242,9 @@ namespace VoxelTK
             GL.UniformMatrix4(viewLocation, true, ref view);
             GL.UniformMatrix4(projectionLocation, true, ref projection);
 
-            Context.SwapBuffers();
+            GL.DrawElements(PrimitiveType.Triangles, indices.Length, DrawElementsType.UnsignedInt, 0);
 
+            Context.SwapBuffers();
             base.OnRenderFrame(args);
         }
 
