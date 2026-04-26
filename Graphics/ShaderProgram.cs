@@ -5,7 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using OpenTK.Graphics.OpenGL4;
 
-namespace Minecraft_Clone_Tutorial_Series_videoproj.Graphics
+namespace VoxelTK.Graphics
 {
     internal class ShaderProgram
     {

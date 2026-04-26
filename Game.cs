@@ -1,4 +1,4 @@
-﻿using Minecraft_Clone_Tutorial_Series_videoproj.Graphics;
+﻿using VoxelTK.Graphics;
 using OpenTK.Compute.OpenCL;
 using OpenTK.Graphics.OpenGL4;
 using OpenTK.Mathematics;
