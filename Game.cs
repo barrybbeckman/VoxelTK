@@ -16,9 +16,6 @@ namespace VoxelTK
         // Camera
         Camera camera;
 
-        // Transformation Variables
-        float yRot = 0f;
-
         public int Width, Height;
 
         public Game(int Width, int Height) : base(GameWindowSettings.Default, NativeWindowSettings.Default)
@@ -46,6 +43,9 @@ namespace VoxelTK
             program = new ShaderProgram("Default.vert", "Default.frag");
 
             GL.Enable(EnableCap.DepthTest);
+            GL.FrontFace(FrontFaceDirection.Cw);
+            GL.Enable(EnableCap.CullFace);
+            GL.CullFace(CullFaceMode.Back);
 
             camera = new Camera((float)Width, (float)Height, Vector3.Zero);
             CursorState = CursorState.Grabbed;
@@ -64,7 +64,6 @@ namespace VoxelTK
             GL.ClearColor(0.3f, 0.3f, 1f, 1f);
             GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
 
-            // Transformation Matrices
             Matrix4 model = Matrix4.Identity;
             Matrix4 view = camera.GetViewMatrix();
             Matrix4 projection = camera.GetProjectionMatrix();

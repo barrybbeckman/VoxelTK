@@ -10,6 +10,7 @@ namespace VoxelTK.World
     internal class Block
     {
         public Vector3 position;
+        public BlockType type;
 
         public Dictionary<Faces, FaceData> faces;
 
@@ -20,39 +21,41 @@ namespace VoxelTK.World
             new Vector2(1f, 0f),
             new Vector2(0f, 0f),
         };
-        public Block(Vector3 position)
+
+        public Block(Vector3 position, BlockType blockType = BlockType.AIR)
         {
+            type = blockType;
             this.position = position;
 
             faces = new Dictionary<Faces, FaceData>
             {
-                {Faces.Front, new FaceData {
-                    vertices = AddTransformedVertices(FaceDataRaw.rawVertexData[Faces.Front]),
+                {Faces.FRONT, new FaceData {
+                    vertices = AddTransformedVertices(FaceDataRaw.rawVertexData[Faces.FRONT]),
                     uv = dirtUV
                 } },
-                {Faces.Back, new FaceData {
-                    vertices = AddTransformedVertices(FaceDataRaw.rawVertexData[Faces.Back]),
+                {Faces.BACK, new FaceData {
+                    vertices = AddTransformedVertices(FaceDataRaw.rawVertexData[Faces.BACK]),
                     uv = dirtUV
                 } },
-                {Faces.Left, new FaceData {
-                    vertices = AddTransformedVertices(FaceDataRaw.rawVertexData[Faces.Left]),
+                {Faces.LEFT, new FaceData {
+                    vertices = AddTransformedVertices(FaceDataRaw.rawVertexData[Faces.LEFT]),
                     uv = dirtUV
                 } },
-                {Faces.Right, new FaceData {
-                    vertices = AddTransformedVertices(FaceDataRaw.rawVertexData[Faces.Right]),
+                {Faces.RIGHT, new FaceData {
+                    vertices = AddTransformedVertices(FaceDataRaw.rawVertexData[Faces.RIGHT]),
                     uv = dirtUV
                 } },
-                {Faces.Top, new FaceData {
-                    vertices = AddTransformedVertices(FaceDataRaw.rawVertexData[Faces.Top]),
+                {Faces.TOP, new FaceData {
+                    vertices = AddTransformedVertices(FaceDataRaw.rawVertexData[Faces.TOP]),
                     uv = dirtUV
                 } },
-                {Faces.Bottom, new FaceData {
-                    vertices = AddTransformedVertices(FaceDataRaw.rawVertexData[Faces.Bottom]),
+                {Faces.BOTTOM, new FaceData {
+                    vertices = AddTransformedVertices(FaceDataRaw.rawVertexData[Faces.BOTTOM]),
                     uv = dirtUV
                 } },
-
             };
         }
+
         public List<Vector3> AddTransformedVertices(List<Vector3> vertices)
         {
             List<Vector3> transformedVertices = new List<Vector3>();
@@ -62,6 +65,7 @@ namespace VoxelTK.World
             }
             return transformedVertices;
         }
+
         public FaceData GetFace(Faces face)
         {
             return faces[face];
