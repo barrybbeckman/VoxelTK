@@ -113,6 +113,9 @@ namespace VoxelTK
         int EBO;
         int TextureId;
 
+        // Camera
+        Camera CameraObject;
+
         // Transformation Variables
         float yRot = 0f;
 
@@ -200,6 +203,9 @@ namespace VoxelTK
             // Unbind Texture
             GL.BindTexture(TextureTarget.Texture2D, 0);
             GL.Enable(EnableCap.DepthTest);
+
+            CameraObject = new Camera((float)Width, (float)Height, Vector3.Zero);
+            CursorState = CursorState.Grabbed;
         }
 
         protected override void OnUnload()
@@ -216,7 +222,7 @@ namespace VoxelTK
 
         protected override void OnRenderFrame(FrameEventArgs args)
         {
-            GL.ClearColor(0.6f, 0.0f, 1.0f, 1f);
+            GL.ClearColor(0.2f, 0.0f, 1.0f, 1f);
             GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit); 
 
             GL.UseProgram(ShaderProgram);
@@ -224,14 +230,15 @@ namespace VoxelTK
             GL.BindBuffer(BufferTarget.ElementArrayBuffer, EBO);
             GL.BindTexture(TextureTarget.Texture2D, TextureId);
 
+            // Transformation Matrices
             Matrix4 model = Matrix4.Identity;
-            Matrix4 view = Matrix4.Identity;
-            Matrix4 projection = Matrix4.CreatePerspectiveFieldOfView(MathHelper.DegreesToRadians(90.0f), Width / Height, 0.1f, 100.0f);
+            Matrix4 view = CameraObject.GetViewMatrix();
+            Matrix4 projection = CameraObject.GetProjectionMatrix();
 
             model = Matrix4.CreateRotationY(yRot);
-            yRot += 0.002f;
+            yRot += 0.005f;
 
-            Matrix4 translation = Matrix4.CreateTranslation(0f, 0f, -3f);
+            Matrix4 translation = Matrix4.CreateTranslation(0f, 5f, 0f);
             model *= translation;
 
             int modelLocation = GL.GetUniformLocation(ShaderProgram, "model");
@@ -250,7 +257,11 @@ namespace VoxelTK
 
         protected override void OnUpdateFrame(FrameEventArgs args)
         {
+            MouseState mouse = MouseState;
+            KeyboardState input = KeyboardState;
+
             base.OnUpdateFrame(args);
+            CameraObject.Update(input, mouse, args);
         }
 
         protected override void OnResize(ResizeEventArgs e)
