@@ -1,13 +1,16 @@
-﻿using StbImageSharp;
-using System;
-using System.Collections.Generic;
-using System.Text;
-using System.Linq;
+﻿using Minecraft_Clone_Tutorial_Series_videoproj.Graphics;
+using OpenTK.Compute.OpenCL;
 using OpenTK.Graphics.OpenGL4;
 using OpenTK.Mathematics;
 using OpenTK.Windowing.Common;
 using OpenTK.Windowing.Desktop;
 using OpenTK.Windowing.GraphicsLibraryFramework;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using VoxelTK.Graphics;
+using static OpenTK.Graphics.OpenGL.GL;
 
 namespace VoxelTK
 {
@@ -81,7 +84,7 @@ namespace VoxelTK
             new Vector2(0f, 0f),
         };
 
-        uint[] indices =
+        List<uint> indices = new List<uint>
         {
             // first face
             // top triangle
@@ -105,13 +108,10 @@ namespace VoxelTK
             22, 23, 20
         };
 
-        // Render Pipeline Vars
-        int VAO;
-        int ShaderProgram;
-        int VBO;
-        int TextureVBO;
-        int EBO;
-        int TextureId;
+        VAO Vao;
+        IBO Ibo;
+        ShaderProgram Program;
+        Texture Texture;
 
         // Camera
         Camera CameraObject;
@@ -133,75 +133,19 @@ namespace VoxelTK
         {
             base.OnLoad();
 
-            // Generate and bind VAO
-            VAO = GL.GenVertexArray();
-            GL.BindVertexArray(VAO);
+            Vao = new VAO();
 
-            // Position VBO
-            VBO = GL.GenBuffer();
-            GL.BindBuffer(BufferTarget.ArrayBuffer, VBO);
-            GL.BufferData(BufferTarget.ArrayBuffer, vertices.Count * Vector3.SizeInBytes, vertices.ToArray(), BufferUsageHint.StaticDraw);
+            VBO Vbo = new VBO(vertices);
+            Vao.LinkToVAO(0, 3, Vbo);
+            VBO uvVBO = new VBO(texCoords);
+            Vao.LinkToVAO(1, 2, uvVBO);
 
-            GL.VertexAttribPointer(0, 3, VertexAttribPointerType.Float, false, 0, 0);
-            GL.EnableVertexArrayAttrib(VAO, 0);
+            Ibo = new IBO(indices);
 
-            // Texture Coord VBO
-            TextureVBO = GL.GenBuffer();
-            GL.BindBuffer(BufferTarget.ArrayBuffer, TextureVBO);
-            GL.BufferData(BufferTarget.ArrayBuffer, texCoords.Count * Vector2.SizeInBytes, texCoords.ToArray(), BufferUsageHint.StaticDraw);
+            Program = new ShaderProgram("Default.vert", "Default.frag");
 
-            // Set attrib pointer for tex coords (location = 1) while texture VBO is bound
-            GL.VertexAttribPointer(1, 2, VertexAttribPointerType.Float, false, 0, 0);
-            GL.EnableVertexArrayAttrib(VAO, 1);
+            Texture = new Texture("grass_block_side.png");
 
-            // EBO must be bound INSIDE the VAO bind so the VAO remembers it
-            EBO = GL.GenBuffer();
-            GL.BindBuffer(BufferTarget.ElementArrayBuffer, EBO);
-            GL.BufferData(BufferTarget.ElementArrayBuffer, indices.Length * sizeof(uint), indices, BufferUsageHint.StaticDraw);
-            GL.BindBuffer(BufferTarget.ElementArrayBuffer, 0);
-
-            // Create ShaderProgram
-            ShaderProgram = GL.CreateProgram();
-
-            int vertexShader = GL.CreateShader(ShaderType.VertexShader);
-            GL.ShaderSource(vertexShader, LoadShaderSource("Default.vert"));
-            GL.CompileShader(vertexShader);
-            Console.WriteLine(GL.GetShaderInfoLog(vertexShader));
-
-            int fragmentShader = GL.CreateShader(ShaderType.FragmentShader);
-            GL.ShaderSource(fragmentShader, LoadShaderSource("Default.frag"));
-            GL.CompileShader(fragmentShader);
-            Console.WriteLine(GL.GetShaderInfoLog(fragmentShader)); // Fix: was GetProgramInfoLog
-
-            GL.AttachShader(ShaderProgram, vertexShader);
-            GL.AttachShader(ShaderProgram, fragmentShader);
-
-            GL.LinkProgram(ShaderProgram);
-            Console.WriteLine(GL.GetProgramInfoLog(ShaderProgram));
-
-            // Delete Shaders after linking
-            GL.DeleteShader(vertexShader);
-            GL.DeleteShader(fragmentShader);
-
-            // Textures
-            TextureId = GL.GenTexture();
-            GL.ActiveTexture(TextureUnit.Texture0);
-            GL.BindTexture(TextureTarget.Texture2D, TextureId);
-
-            // Texture Parameters
-            GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapS, (int)TextureWrapMode.Repeat);
-            GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapT, (int)TextureWrapMode.Repeat);
-            GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMinFilter, (int)TextureMinFilter.Nearest);
-            GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMagFilter, (int)TextureMagFilter.Nearest);
-
-            // Load Grass Texture
-            StbImage.stbi_set_flip_vertically_on_load(1);
-            ImageResult GrassTexture = ImageResult.FromStream(File.OpenRead("../../../Textures/block/grass_block_side.png"), ColorComponents.RedGreenBlueAlpha);
-
-            GL.TexImage2D(TextureTarget.Texture2D, 0, PixelInternalFormat.Rgba, GrassTexture.Width, GrassTexture.Height, 0, PixelFormat.Rgba, PixelType.UnsignedByte, GrassTexture.Data);
-
-            // Unbind Texture
-            GL.BindTexture(TextureTarget.Texture2D, 0);
             GL.Enable(EnableCap.DepthTest);
 
             CameraObject = new Camera((float)Width, (float)Height, Vector3.Zero);
@@ -212,23 +156,21 @@ namespace VoxelTK
         {
             base.OnUnload();
 
-            GL.DeleteVertexArray(VAO);
-            GL.DeleteBuffer(VBO);
-            GL.DeleteBuffer(TextureVBO);
-            GL.DeleteBuffer(EBO);
-            GL.DeleteTexture(TextureId);
-            GL.DeleteProgram(ShaderProgram);
+            Vao.Delete();
+            Ibo.Delete();
+            Texture.Delete();
+            Program.Delete();
         }
 
         protected override void OnRenderFrame(FrameEventArgs args)
         {
             GL.ClearColor(0.2f, 0.0f, 1.0f, 1f);
-            GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit); 
+            GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
 
-            GL.UseProgram(ShaderProgram);
-            GL.BindVertexArray(VAO);
-            GL.BindBuffer(BufferTarget.ElementArrayBuffer, EBO);
-            GL.BindTexture(TextureTarget.Texture2D, TextureId);
+            Program.Bind();
+            Vao.Bind();
+            Texture.Bind();
+            Ibo.Bind();
 
             // Transformation Matrices
             Matrix4 model = Matrix4.Identity;
@@ -236,22 +178,28 @@ namespace VoxelTK
             Matrix4 projection = CameraObject.GetProjectionMatrix();
 
             model = Matrix4.CreateRotationY(yRot);
-            yRot += 0.005f;
+            yRot += 0.001f;
 
-            Matrix4 translation = Matrix4.CreateTranslation(0f, 5f, 0f);
+            Matrix4 translation = Matrix4.CreateTranslation(0f, -5f, 0f);
+
             model *= translation;
 
-            int modelLocation = GL.GetUniformLocation(ShaderProgram, "model");
-            int viewLocation = GL.GetUniformLocation(ShaderProgram, "view");
-            int projectionLocation = GL.GetUniformLocation(ShaderProgram, "projection");
+            int modelLocation = GL.GetUniformLocation(Program.ID, "model");
+            int viewLocation = GL.GetUniformLocation(Program.ID, "view");
+            int projectionLocation = GL.GetUniformLocation(Program.ID, "projection");
 
             GL.UniformMatrix4(modelLocation, true, ref model);
             GL.UniformMatrix4(viewLocation, true, ref view);
             GL.UniformMatrix4(projectionLocation, true, ref projection);
 
-            GL.DrawElements(PrimitiveType.Triangles, indices.Length, DrawElementsType.UnsignedInt, 0);
+            GL.DrawElements(PrimitiveType.Triangles, indices.Count, DrawElementsType.UnsignedInt, 0);
+
+            model += Matrix4.CreateTranslation(new Vector3(2f, 0f, 0f));
+            GL.UniformMatrix4(modelLocation, true, ref model);
+            GL.DrawElements(PrimitiveType.Triangles, indices.Count, DrawElementsType.UnsignedInt, 0);
 
             Context.SwapBuffers();
+
             base.OnRenderFrame(args);
         }
 
@@ -271,26 +219,6 @@ namespace VoxelTK
             GL.Viewport(0, 0, e.Width, e.Height);
             this.Width = e.Width;
             this.Height = e.Height;
-        }
-
-        public static string LoadShaderSource(string filePath)
-        {
-            string shaderSource = "";
-
-            try
-            {
-                using (StreamReader reader = new StreamReader("../../../Shaders/" + filePath))
-                {
-                    shaderSource = reader.ReadToEnd();
-                }
-                Console.WriteLine(shaderSource);
-            }
-            catch (Exception e)
-            {
-                Console.WriteLine("failed to load shader source file: " + e.Message);
-            }
-
-            return shaderSource;
         }
     }
 }
