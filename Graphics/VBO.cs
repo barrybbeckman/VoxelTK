@@ -25,6 +25,6 @@ namespace VoxelTK.Graphics
         
         public void Bind() { GL.BindBuffer(BufferTarget.ArrayBuffer, ID); }
         public void Unbind() { GL.BindBuffer(BufferTarget.ArrayBuffer, 0); }
-        public void Delet() { GL.DeleteBuffer(ID);  }
+        public void Delete() { GL.DeleteBuffer(ID);  }
     }
 }
